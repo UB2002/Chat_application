@@ -10,10 +10,20 @@ const Message = require('./models/Message');
 
 const app = express();
 app.use(express.json({ limit: '5mb' }));
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+// Simplified CORS configuration
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: process.env.FRONTEND_URL || '*' } });
+const io = new Server(server, {
+  cors: {
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST"]
+  }
+});
 
 io.on('connection', socket => {
   console.log('Socket connected:', socket.id);

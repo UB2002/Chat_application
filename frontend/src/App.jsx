@@ -11,7 +11,7 @@ function App() {
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); ``
   const [socket, setSocket] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [showSidebar, setShowSidebar] = useState(!isMobile);
@@ -31,18 +31,30 @@ function App() {
 
   useEffect(() => {
     // Initialize socket connection
-    const newSocket = io(API_BASE);
+    const newSocket = io(API_BASE, {
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true
+    });
     setSocket(newSocket);
+
+    newSocket.on('connect', () => {
+      console.log('Connected to server');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.log('Connection error:', error);
+    });
 
     // Listen for real-time messages
     newSocket.on('new_message', (message) => {
       // Update conversations list
       fetchConversations();
-      
+
       // If this message is for the currently selected chat, add it to messages
       if (selectedChat && message.wa_id === selectedChat.wa_id) {
         setMessages(prev => {
-          const exists = prev.find(m => 
+          const exists = prev.find(m =>
             (m.message_id && m.message_id === message.message_id) ||
             (m.meta_msg_id && m.meta_msg_id === message.meta_msg_id) ||
             m._id === message._id
@@ -58,21 +70,35 @@ function App() {
     // Listen for status updates
     newSocket.on('update_status', (message) => {
       if (selectedChat && message.wa_id === selectedChat.wa_id) {
-        setMessages(prev => prev.map(m => 
+        setMessages(prev => prev.map(m =>
           (m.message_id && m.message_id === message.message_id) ||
-          (m.meta_msg_id && m.meta_msg_id === message.meta_msg_id) ||
-          m._id === message._id ? { ...m, status: message.status } : m
+            (m.meta_msg_id && m.meta_msg_id === message.meta_msg_id) ||
+            m._id === message._id ? { ...m, status: message.status } : m
         ));
       }
     });
 
-    return () => newSocket.close();
+    return () => {
+      newSocket.close();
+    };
   }, [selectedChat]);
 
   const fetchConversations = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/conversations`);
+      console.log('Fetching conversations from:', `${API_BASE}/api/conversations`);
+      const response = await fetch(`${API_BASE}/api/conversations`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('Conversations data:', data);
       setConversations(data);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -155,7 +181,7 @@ function App() {
           onChatSelect={handleChatSelect}
         />
       </div>
-      
+
       <div className={`main-container ${!showSidebar ? 'full-width' : ''}`}>
         {selectedChat ? (
           <ChatWindow

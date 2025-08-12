@@ -5,7 +5,7 @@ import ChatWindow from './components/ChatWindow';
 import WelcomeScreen from './components/WelcomeScreen';
 import './App.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://chat-application-ycgv.onrender.com';
 
 function App() {
   const [conversations, setConversations] = useState([]);

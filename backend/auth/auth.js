@@ -26,20 +26,6 @@ const comparePassword = async(password, hash) => {
     return bcrypt.compare(password, hash);
 };
 
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if(!authHeader) return res.status(401).json({ message: "Missing token" });
-    const token = authHeader.split(" ")[1];
-    try {
-        const decoded = jwt.verify(token, jwt_secret);
-        req.user = decoded; // attach decoded user to request
-        next();
-    } 
-    catch (err) {
-        return res.status(401).json({ message: "Invalid token" });
-    }
-
-}
 
 module.exports = {
     generateToken,

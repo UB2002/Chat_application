@@ -3,10 +3,6 @@ const bcrypt = require("bcryptjs")
 
 
 const jwt_secret = process.env.JWT_SECRET;
-if (!jwt_secret) {
-    // Surface a clear error early to avoid generating unverifiable tokens
-    throw new Error("JWT_SECRET is not set. Please define it in environment or .env");
-}
 
 const generateToken = (user) => {
     return jwt.sign({
@@ -31,5 +27,4 @@ module.exports = {
     generateToken,
     hashPassword,
     comparePassword,
-    verifyToken
 };

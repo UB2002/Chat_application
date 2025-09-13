@@ -35,17 +35,17 @@ function Login_Page() {
       if (isRegister) {
         // Register new user
         await register({ username, password });
-        alert("Registration successful ✅");
+        alert("Registration successful");
         setIsRegister(false); // Switch back to login form
       } else {
         // Login existing user
         await login({ username, password });
-        alert("Login successful ✅");
+        alert("Login successful");
         navigate("/dashboard");
       }
     } catch (err) {
       console.error(err);
-      alert(isRegister ? "Registration failed ❌" : "Login failed ❌");
+      alert(isRegister ? "Registration failed " : "Login failed ");
     }
   };
 

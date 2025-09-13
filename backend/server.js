@@ -45,6 +45,8 @@ io.use(async (socket, next) => {
 
 io.on('connection', (socket) => {
   console.log('socket connected:', socket.user.id);
+  const user_socket_room = `user_${socket.user.id}`;
+  socket.join(user_socket_room);
 
   socket.on('join_conversation', (conversationId) => {
     socket.join(`conv_${conversationId}`);
@@ -68,7 +70,11 @@ io.on('connection', (socket) => {
       const values = [sender_id, receiver_id, message];
       const result = await pool.query(insert, values);
       const savedMessage = result.rows[0];
-      socket.emit('message_sent_confirmation', savedMessage);
+      
+      const sender_room = `user_${sender_id}`;
+      const receiver_room = `user_${receiver_id}`;
+
+      io.to(sender_room).to(receiver_room).emit('message_receive', savedMessage);
 
     } catch (err) {
       console.error('socket message error', err);

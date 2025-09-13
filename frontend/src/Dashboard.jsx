@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import { io } from "socket.io-client";
 
 export default function Dashboard() {
   const [contacts, setContacts] = useState([]);
@@ -7,17 +8,44 @@ export default function Dashboard() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [newContactUsername, setNewContactUsername] = useState("");
+  const socket = useRef(null);
 
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  // ✅ Set default Authorization header
+  // Set default Authorization header
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
   }, [token]);
 
-  // ✅ Fetch contacts
+  // WebSocket connection
+  useEffect(() => {
+    if (token) {
+      socket.current = io("http://localhost:3000", {
+        auth: { token },
+      });
+
+      socket.current.on("connect", () => {
+        console.log("Socket connected");
+      });
+
+      socket.current.on("disconnect", () => {
+        console.log("Socket disconnected");
+      });
+
+      socket.current.on("message_receive", (message) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
+
+      return () => {
+        socket.current.disconnect();
+      };
+    }
+  }, [token]);
+
+  // Fetch contacts
   const fetchContacts = async () => {
     try {
       const res = await axios.get("http://localhost:3000/api/contacts");
@@ -31,7 +59,7 @@ export default function Dashboard() {
     fetchContacts();
   }, []);
 
-  // ✅ Fetch messages (with polling)
+  // Fetch initial messages
   useEffect(() => {
     if (!selectedContact) return;
 
@@ -46,28 +74,23 @@ export default function Dashboard() {
       }
     };
 
-    fetchMessages(); // load immediately
-    const interval = setInterval(fetchMessages, 1000); // ⏳ poll every 3s
-
-    return () => clearInterval(interval); // cleanup when contact changes/unmount
+    fetchMessages();
   }, [selectedContact]);
 
-  // ✅ Send message
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedContact) return;
-    try {
-      const res = await axios.post("http://localhost:3000/api/messages", {
-        receiver_id: selectedContact.id,
-        message: newMessage,
-      });
-      setMessages((prev) => [...prev, res.data]);
-      setNewMessage("");
-    } catch (err) {
-      console.error("Error sending message:", err);
-    }
+  // Send message
+  const sendMessage = () => {
+    if (!newMessage.trim() || !selectedContact || !socket.current) return;
+
+    const messagePayload = {
+      receiver_id: selectedContact.id,
+      message: newMessage,
+    };
+
+    socket.current.emit("message_send", messagePayload);
+    setNewMessage("");
   };
 
-  // ✅ Add new contact
+  // Add new contact
   const addContact = async () => {
     if (!newContactUsername.trim()) return;
     try {
@@ -140,16 +163,16 @@ export default function Dashboard() {
                 <div
                   key={m.id}
                   className={`mb-4 ${
-                    m.sender_id === selectedContact.id
-                      ? "text-left"
-                      : "text-right"
+                    m.sender_id === user.id
+                      ? "text-right"
+                      : "text-left"
                   }`}
                 >
                   <div
                     className={`inline-block px-4 py-2 rounded-lg shadow ${
-                      m.sender_id === selectedContact.id
-                        ? "bg-white text-gray-800"
-                        : "bg-indigo-600 text-white"
+                      m.sender_id === user.id
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-gray-800"
                     }`}
                   >
                     {m.message}
@@ -165,6 +188,7 @@ export default function Dashboard() {
                 placeholder="Type a message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                 className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button

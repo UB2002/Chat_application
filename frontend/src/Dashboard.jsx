@@ -2,6 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 
+const api = import.meta.env.API;
+
+
 export default function Dashboard() {
   const [contacts, setContacts] = useState([]);
   const [selectedContact, setSelectedContact] = useState(null);
@@ -23,7 +26,7 @@ export default function Dashboard() {
   // WebSocket connection
   useEffect(() => {
     if (token) {
-      socket.current = io("http://localhost:3000", {
+      socket.current = io(`${api}`, {
         auth: { token },
       });
 
@@ -48,7 +51,7 @@ export default function Dashboard() {
   // Fetch contacts
   const fetchContacts = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/contacts");
+      const res = await axios.get(`${api}/api/contacts`);
       setContacts(res.data);
     } catch (err) {
       console.error("Error fetching contacts:", err);
@@ -66,7 +69,7 @@ export default function Dashboard() {
     const fetchMessages = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:3000/api/messages/${selectedContact.id}`
+          `${api}/api/messages/${selectedContact.id}`
         );
         setMessages(res.data);
       } catch (err) {
@@ -94,7 +97,7 @@ export default function Dashboard() {
   const addContact = async () => {
     if (!newContactUsername.trim()) return;
     try {
-      await axios.post("http://localhost:3000/api/contacts", {
+      await axios.post(`${api}/api/contacts`, {
         username: newContactUsername,
       });
       setNewContactUsername("");

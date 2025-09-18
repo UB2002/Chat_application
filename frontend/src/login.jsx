@@ -2,8 +2,10 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const api = import.meta.env.API
+
 const login = async (data) => {
-  const res = await axios.post("http://localhost:3000/api/users/login", {
+  const res = await axios.post( `${api}/api/users/login`, {
     username: data.username,
     password: data.password,
   });
@@ -13,7 +15,7 @@ const login = async (data) => {
 };
 
 const register = async (data) => {
-  const res = await axios.post("http://localhost:3000/api/users/register", {
+  const res = await axios.post(`${api}/api/users/register`, {
     username: data.username,
     password: data.password,
   });

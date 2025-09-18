@@ -2,7 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const api = import.meta.env.API
+const api = import.meta.env.API || "http://localhost:3000";
+
 
 const login = async (data) => {
   const res = await axios.post( `${api}/api/users/login`, {

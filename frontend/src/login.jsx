@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const api = import.meta.env.API || "http://localhost:3000";
+const api = import.meta.env.VITE_API || "http://localhost:3000";
 
 
 const login = async (data) => {

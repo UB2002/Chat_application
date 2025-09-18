@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const api = import.meta.env.API || "http://localhost:3000";
+const api = import.meta.env.VITE_API || "http://localhost:3000";
 
 
 export default function Dashboard() {
